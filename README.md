@@ -7,3 +7,7 @@ npm install
 npm run dev
 
 Open http://localhost:3000
+
+
+## Live Website
+https://meedi-book.vercel.app/
