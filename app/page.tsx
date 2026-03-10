@@ -300,4 +300,3 @@ function PhoneCard({
     </div>
   );
 }
-this is my page code can you update the page fix it and make it more better for my website page please can you do all that and i just copy and past it ? 
