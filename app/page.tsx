@@ -300,3 +300,125 @@ function PhoneCard({
     </div>
   );
 }
+<div>
+              <div className="text-sm font-bold uppercase tracking-[0.14em] text-sky-300">Quick Links</div>
+              <div className="mt-4 flex flex-col gap-2 text-sm font-semibold text-white/68">
+                <a href="#about" className="hover:text-white">About</a>
+                <a href="#features" className="hover:text-white">Features</a>
+                <a href="#testimonials" className="hover:text-white">Testimonials</a>
+                <a href="#download" className="hover:text-white">Download</a>
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-bold uppercase tracking-[0.14em] text-sky-300">Contact</div>
+              <div className="mt-4 text-sm font-semibold text-white/68">karimdiab7800@gmail.com</div>
+              <div className="mt-2 text-sm font-semibold text-white/68">+20 100 674 1810 (WhatsApp)</div>
+              <div className="mt-2 text-sm font-semibold text-white/68">Cairo, Egypt</div>
+            </div>
+          </div>
+
+          <a
+            href="https://wa.me/201006741810"
+            target="_blank"
+            rel="noreferrer"
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-full bg-green-500 px-5 py-3 text-sm font-bold text-white shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition hover:scale-105"
+          >
+            WhatsApp Us
+          </a>
+        </footer>
+      </div>
+    </>
+  );
+}
+
+function SplashOverlay() {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111f]">
+      <div className="relative flex flex-col items-center gap-6">
+        <div className="flex h-28 w-28 animate-splashFloat items-center justify-center rounded-[28px] bg-gradient-to-br from-slate-900 via-blue-700 to-sky-400 shadow-[0_30px_80px_rgba(59,130,246,0.45)]">
+          <div className="grid grid-cols-3 gap-1">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <span
+                key={i}
+                className="h-2 w-2 rounded-full bg-white animate-splashPulse"
+                style={{ animationDelay: `${i * 0.08}s` }}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="animate-fadeIn text-3xl font-black tracking-tight text-white">MediBook</div>
+      </div>
+    </div>
+  );
+}
+
+function LogoGrid() {
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <span key={i} className="h-1.5 w-1.5 rounded-full bg-white" />
+      ))}
+    </div>
+  );
+}
+
+function PhoneCard({
+  tone,
+  title,
+  subtitle,
+  featured = false,
+}: {
+  tone: string;
+  title: string;
+  subtitle: string;
+  featured?: boolean;
+}) {
+  return (
+    <div
+      className={`motion-float motion-tilt relative rounded-[42px] bg-gradient-to-br ${tone} p-[1px] shadow-[0_35px_80px_rgba(0,0,0,0.34)] ${
+        featured
+          ? "h-[580px] w-[280px] md:w-[320px]"
+          : "h-[510px] w-[220px] translate-y-10 md:w-[240px]"
+      }`}
+    >
+      <div className="absolute inset-0 rounded-[42px] border border-white/15" />
+      <div className="relative flex h-full flex-col overflow-hidden rounded-[41px] bg-black/10 backdrop-blur-sm">
+        <div className="flex items-center justify-between px-5 pt-5 text-white">
+          <div className="text-lg font-black tracking-tight">MediBook</div>
+          <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">Live</div>
+        </div>
+
+        <div className="px-5 pt-6 text-white">
+          <div className="max-w-[180px] text-4xl font-black leading-none tracking-tight">{title}</div>
+          <div className="mt-3 text-sm font-medium text-white/80">{subtitle}</div>
+        </div>
+
+        <div className="relative mt-6 flex-1 px-6">
+          <div className="absolute left-1/2 top-8 h-44 w-36 -translate-x-1/2 rounded-[30px] bg-white/85 shadow-[0_24px_50px_rgba(0,0,0,0.22)]" />
+          <div className="absolute left-1/2 top-3 h-12 w-28 -translate-x-1/2 rounded-2xl bg-white/95" />
+          <div className="absolute bottom-6 left-1/2 h-5 w-24 -translate-x-1/2 rounded-full bg-black/25 blur-md" />
+        </div>
+
+        <div className="m-3 rounded-[28px] bg-white p-5 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+          <div className="text-2xl font-black leading-tight tracking-tight">Premium Medical Booking</div>
+          <div className="mt-2 text-sm font-medium text-slate-500">
+            Beautiful doctor discovery, booking, and patient care flow.
+          </div>
+          <button className="mt-4 w-full rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-extrabold text-slate-950">
+            Explore
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*
+Manual test checklist:
+1. Splash overlay appears first, then disappears after about 2.2 seconds.
+2. Page renders without syntax errors.
+3. Scrolling adds the "active" class to .reveal sections.
+4. WhatsApp floating button opens a new tab safely.
+5. Navigation anchors jump to the correct sections.
+*/
