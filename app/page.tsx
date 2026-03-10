@@ -1,4 +1,3 @@
-"use client";
 import { useEffect, useState } from "react";
 
 export default function MediBookWebsiteLandingPage() {
@@ -36,8 +35,17 @@ export default function MediBookWebsiteLandingPage() {
       name: "Karim Diab",
       role: "Founder",
       quote:
-        "MediBook was founded to make healthcare feel modern, elegant, and smooth on both mobile and web.",
+        "MediBook was founded to make healthcare feel modern, elegant, and smooth on both mobile and web — built with care by Dr. Salma Ashraf and Karim Diab.",
     },
+  ];
+
+  const specialties = [
+    "Dental",
+    "Cardiology",
+    "Dermatology",
+    "Neurology",
+    "Orthopedics",
+    "Pediatrics",
   ];
 
   useEffect(() => {
@@ -144,6 +152,22 @@ export default function MediBookWebsiteLandingPage() {
                   Explore Features
                 </a>
               </div>
+
+              <div className="mt-10 grid max-w-lg grid-cols-3 gap-4">
+                {[
+                  ["120+", "Doctors"],
+                  ["24/7", "Support"],
+                  ["4.9", "Rating"],
+                ].map(([value, label]) => (
+                  <div
+                    key={label}
+                    className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_18px_40px_rgba(0,0,0,0.2)] backdrop-blur-xl"
+                  >
+                    <div className="text-2xl font-black tracking-tight text-white">{value}</div>
+                    <div className="mt-1 text-sm font-semibold text-white/55">{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="relative mx-auto w-full max-w-3xl">
@@ -159,12 +183,39 @@ export default function MediBookWebsiteLandingPage() {
             </div>
           </section>
 
+          <section id="about" className="reveal mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-16">
+            <div className="grid gap-8 rounded-[38px] border border-white/10 bg-white/5 p-8 shadow-[0_24px_60px_rgba(0,0,0,0.24)] backdrop-blur-2xl md:grid-cols-[1.2fr_0.8fr] md:p-12">
+              <div>
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-sky-300">About</div>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+                  Built to make healthcare feel trustworthy, luxury, and beautifully modern.
+                </h2>
+                <p className="mt-5 max-w-2xl text-sm leading-8 text-white/70 md:text-base">
+                  MediBook is more than an appointment app. It is a premium patient platform designed with rich gradients, soft 3D-inspired mockups, polished navigation, and a one-page brand experience that feels high-end from the very first screen.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {specialties.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-3xl border border-white/10 bg-white/5 px-4 py-5 text-center text-sm font-bold text-white/85 shadow-[0_14px_30px_rgba(0,0,0,0.15)]"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           <section id="features" className="reveal mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-16">
-            <div className="mb-8">
-              <div className="text-sm font-bold uppercase tracking-[0.18em] text-sky-300">Features</div>
-              <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
-                One-page scrolling design with premium sections that sell the product.
-              </h2>
+            <div className="mb-8 flex items-end justify-between gap-6">
+              <div>
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-sky-300">Features</div>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
+                  One-page scrolling design with premium sections that sell the product.
+                </h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -213,94 +264,45 @@ export default function MediBookWebsiteLandingPage() {
               ))}
             </div>
           </section>
+
+          <section id="download" className="reveal mx-auto max-w-7xl px-6 py-8 lg:px-8 lg:py-16">
+            <div className="grid items-center gap-8 rounded-[40px] border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/5 p-8 shadow-[0_30px_70px_rgba(0,0,0,0.26)] backdrop-blur-2xl md:grid-cols-2 md:p-12">
+              <div>
+                <div className="text-sm font-bold uppercase tracking-[0.18em] text-sky-300">Download App</div>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
+                  Bring the premium MediBook experience to every patient.
+                </h2>
+                <p className="mt-4 max-w-lg text-sm leading-7 text-white/70">
+                  Download the app to discover doctors, book appointments, manage care, and enjoy the same elegant experience as the website.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4 md:justify-end">
+                <button className="rounded-2xl bg-white px-6 py-4 text-sm font-extrabold text-slate-950 transition hover:-translate-y-0.5">
+                  App Store
+                </button>
+                <button className="rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-white/10">
+                  Google Play
+                </button>
+              </div>
+            </div>
+          </section>
         </main>
-      </div>
-    </>
-  );
-}
 
-function SplashOverlay() {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#07111f]">
-      <div className="relative flex flex-col items-center gap-6">
-        <div className="flex h-28 w-28 animate-splashFloat items-center justify-center rounded-[28px] bg-gradient-to-br from-slate-900 via-blue-700 to-sky-400 shadow-[0_30px_80px_rgba(59,130,246,0.45)]">
-          <div className="grid grid-cols-3 gap-1">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <span
-                key={i}
-                className="h-2 w-2 rounded-full bg-white animate-splashPulse"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="animate-fadeIn text-3xl font-black tracking-tight text-white">MediBook</div>
-      </div>
-    </div>
-  );
-}
+        <footer id="contact" className="mx-auto max-w-7xl px-6 pb-12 pt-4 lg:px-8">
+          <div className="grid gap-6 rounded-[34px] border border-white/10 bg-white/5 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.2)] backdrop-blur-2xl md:grid-cols-3 md:p-8">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 via-blue-700 to-sky-400 shadow-[0_18px_40px_rgba(59,130,246,0.28)]">
+                  <LogoGrid />
+                </div>
+                <div>
+                  <div className="text-lg font-black tracking-tight text-white">MediBook</div>
+                  <div className="text-sm font-medium text-white/55">Luxury digital healthcare</div>
+                </div>
+              </div>
+            </div>
 
-function LogoGrid() {
-  return (
-    <div className="grid grid-cols-3 gap-1">
-      {Array.from({ length: 9 }).map((_, i) => (
-        <span key={i} className="h-1.5 w-1.5 rounded-full bg-white" />
-      ))}
-    </div>
-  );
-}
-
-function PhoneCard({
-  tone,
-  title,
-  subtitle,
-  featured = false,
-}: {
-  tone: string;
-  title: string;
-  subtitle: string;
-  featured?: boolean;
-}) {
-  return (
-    <div
-      className={`motion-float motion-tilt relative rounded-[42px] bg-gradient-to-br ${tone} p-[1px] shadow-[0_35px_80px_rgba(0,0,0,0.34)] ${
-        featured
-          ? "h-[580px] w-[280px] md:w-[320px]"
-          : "h-[510px] w-[220px] translate-y-10 md:w-[240px]"
-      }`}
-    >
-      <div className="absolute inset-0 rounded-[42px] border border-white/15" />
-      <div className="relative flex h-full flex-col overflow-hidden rounded-[41px] bg-black/10 backdrop-blur-sm">
-        <div className="flex items-center justify-between px-5 pt-5 text-white">
-          <div className="text-lg font-black tracking-tight">MediBook</div>
-          <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">Live</div>
-        </div>
-
-        <div className="px-5 pt-6 text-white">
-          <div className="max-w-[180px] text-4xl font-black leading-none tracking-tight">{title}</div>
-          <div className="mt-3 text-sm font-medium text-white/80">{subtitle}</div>
-        </div>
-
-        <div className="relative mt-6 flex-1 px-6">
-          <div className="absolute left-1/2 top-8 h-44 w-36 -translate-x-1/2 rounded-[30px] bg-white/85 shadow-[0_24px_50px_rgba(0,0,0,0.22)]" />
-          <div className="absolute left-1/2 top-3 h-12 w-28 -translate-x-1/2 rounded-2xl bg-white/95" />
-          <div className="absolute bottom-6 left-1/2 h-5 w-24 -translate-x-1/2 rounded-full bg-black/25 blur-md" />
-        </div>
-
-        <div className="m-3 rounded-[28px] bg-white p-5 text-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
-          <div className="text-2xl font-black leading-tight tracking-tight">Premium Medical Booking</div>
-          <div className="mt-2 text-sm font-medium text-slate-500">
-            Beautiful doctor discovery, booking, and patient care flow.
-          </div>
-          <button className="mt-4 w-full rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-extrabold text-slate-950">
-            Explore
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-<div>
+            <div>
               <div className="text-sm font-bold uppercase tracking-[0.14em] text-sky-300">Quick Links</div>
               <div className="mt-4 flex flex-col gap-2 text-sm font-semibold text-white/68">
                 <a href="#about" className="hover:text-white">About</a>
