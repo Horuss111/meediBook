@@ -347,13 +347,13 @@ export default function MediBookWebsiteLandingPage() {
                 Contact
               </div>
               <div className="mt-4 text-sm font-semibold text-white/68">
-                karimdiab7800@gmail.com
+                {"karimdiab7800@gmail.com"}
               </div>
               <div className="mt-2 text-sm font-semibold text-white/68">
-                +20 100 674 1810
+                {"+20 100 674 1810"}
               </div>
               <div className="mt-2 text-sm font-semibold text-white/68">
-                Cairo, Egypt
+                {"Cairo, Egypt"}
               </div>
             </div>
           </div>
