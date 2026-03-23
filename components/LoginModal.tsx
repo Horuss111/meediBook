@@ -30,7 +30,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   async function verifyOTP() {
     if (otp.length < 6) { setError("Enter the login code"); return; }
     setLoading(true); setError("");
-    const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
+    const { data, error } = await supabase.auth.verifyOtp({
+      email, token: otp, type: "email"
+    });
     if (error) { setError(error.message); setLoading(false); return; }
 
     if (data.user) {
@@ -41,14 +43,16 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         .single();
 
       if (!profile?.full_name) {
+        setLoading(false);
         setStep("name");
       } else {
+        setLoading(false);
+        // ✅ Just close — AuthProvider will detect the session automatically
         onClose();
-        // ✅ Refresh page so navbar updates
-        setTimeout(() => window.location.reload(), 800);
       }
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function saveName() {
@@ -63,9 +67,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
       });
     }
     setLoading(false);
+    // ✅ Just close — AuthProvider will detect the session automatically
     onClose();
-    // ✅ Refresh page so navbar shows the user's name
-    window.location.reload();
   }
 
   return (
