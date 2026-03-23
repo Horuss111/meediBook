@@ -32,7 +32,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   }
 
   async function verifyOTP() {
-    if (otp.length < 6) { setError("Enter the 6-digit code"); return; }
+    if (otp.length < 8) { setError("Enter the 8-digit code"); return; }
     setLoading(true); setError("");
     const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
     if (error) { setError(error.message); setLoading(false); return; }
@@ -167,9 +167,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
             </label>
             <input
               type="text"
-              placeholder="123456"
+              placeholder="12345678"
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
               onKeyDown={(e) => e.key === "Enter" && verifyOTP()}
               style={{
                 width: "100%", padding: "14px 16px",
