@@ -45,7 +45,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
       } else {
         onClose();
         // ✅ Refresh page so navbar updates
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 500);
       }
     }
     setLoading(false);
