@@ -18,7 +18,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   async function sendOTP() {
     if (!email.includes("@")) { setError("Please enter a valid email"); return; }
     setLoading(true); setError("");
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    // ✅ FIXED: Force OTP (6-digit code) instead of magic link
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: undefined,
+      }
+    });
     if (error) { setError(error.message); setLoading(false); return; }
     setStep("otp");
     setLoading(false);
@@ -30,7 +37,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
     if (error) { setError(error.message); setLoading(false); return; }
 
-    // Check if profile exists
     if (data.user) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -111,7 +117,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               Welcome back 👋
             </h2>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
-              Enter your email and we'll send you a login code instantly.
+              Enter your email and we'll send you a 6-digit login code instantly.
             </p>
             <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#93c5fd", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
               Email Address
