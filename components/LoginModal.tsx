@@ -18,13 +18,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   async function sendOTP() {
     if (!email.includes("@")) { setError("Please enter a valid email"); return; }
     setLoading(true); setError("");
-    // ✅ FIXED: Force OTP (6-digit code) instead of magic link
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: undefined,
-      }
+      options: { shouldCreateUser: true, emailRedirectTo: undefined }
     });
     if (error) { setError(error.message); setLoading(false); return; }
     setStep("otp");
@@ -32,7 +28,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   }
 
   async function verifyOTP() {
-    if (otp.length < 8) { setError("Enter the 8-digit code"); return; }
+    if (otp.length < 6) { setError("Enter the login code"); return; }
     setLoading(true); setError("");
     const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
     if (error) { setError(error.message); setLoading(false); return; }
@@ -48,6 +44,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         setStep("name");
       } else {
         onClose();
+        // ✅ Refresh page so navbar updates
+        window.location.reload();
       }
     }
     setLoading(false);
@@ -66,6 +64,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     }
     setLoading(false);
     onClose();
+    // ✅ Refresh page so navbar shows the user's name
+    window.location.reload();
   }
 
   return (
@@ -83,7 +83,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         boxShadow: "0 40px 100px rgba(0,0,0,0.6)",
         position: "relative",
       }}>
-        {/* Close */}
         <button onClick={onClose} style={{
           position: "absolute", top: 16, right: 16,
           background: "rgba(255,255,255,0.07)", border: "none",
@@ -91,7 +90,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center",
         }}>×</button>
 
-        {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
           <div style={{
             width: 40, height: 40, borderRadius: 12,
@@ -110,14 +108,13 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </div>
         </div>
 
-        {/* Step: Email */}
         {step === "email" && (
           <>
             <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em", marginBottom: 8 }}>
               Welcome back 👋
             </h2>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
-              Enter your email and we'll send you a 6-digit login code instantly.
+              Enter your email and we'll send you a login code instantly.
             </p>
             <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#93c5fd", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
               Email Address
@@ -134,7 +131,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
                 border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 12, color: "white", fontSize: 15,
                 outline: "none", fontFamily: "inherit",
-                transition: "border-color 0.2s",
               }}
             />
             {error && <p style={{ color: "#f87171", fontSize: 13, marginTop: 8 }}>{error}</p>}
@@ -146,28 +142,26 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               cursor: loading ? "not-allowed" : "pointer",
               opacity: loading ? 0.7 : 1,
               boxShadow: "0 12px 32px rgba(59,130,246,0.35)",
-              transition: "opacity 0.2s",
             }}>
               {loading ? "Sending..." : "Send Login Code →"}
             </button>
           </>
         )}
 
-        {/* Step: OTP */}
         {step === "otp" && (
           <>
             <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em", marginBottom: 8 }}>
               Check your email 📬
             </h2>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
-              We sent a 6-digit code to <strong style={{ color: "#93c5fd" }}>{email}</strong>
+              We sent a login code to <strong style={{ color: "#93c5fd" }}>{email}</strong>
             </p>
             <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#93c5fd", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
-              6-Digit Code
+              Login Code
             </label>
             <input
               type="text"
-              placeholder="12345678"
+              placeholder="Enter your code"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
               onKeyDown={(e) => e.key === "Enter" && verifyOTP()}
@@ -203,7 +197,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </>
         )}
 
-        {/* Step: Name (first time only) */}
         {step === "name" && (
           <>
             <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em", marginBottom: 8 }}>

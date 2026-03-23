@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import LoginModal from "@/components/LoginModal";
+import UserMenu from "@/components/UserMenu";
 
 const APP_STORE_URL = "https://apps.apple.com/";
 const GOOGLE_PLAY_URL = "https://play.google.com/store/apps";
@@ -16,7 +17,7 @@ export default function MediBookWebsiteLandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 1800);
@@ -330,18 +331,11 @@ export default function MediBookWebsiteLandingPage() {
               ))}
             </nav>
 
-            {/* ✅ LOGIN BUTTON */}
+            {/* ✅ UPDATED: Professional UserMenu dropdown when logged in */}
             <div className="top-actions">
               <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="btn btn-outline">WhatsApp</a>
               {user ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
-                    👋 {profile?.full_name?.split(" ")[0] || "Welcome"}
-                  </span>
-                  <button onClick={signOut} className="btn btn-outline" style={{ padding: "8px 16px", fontSize: 13 }}>
-                    Sign Out
-                  </button>
-                </div>
+                <UserMenu />
               ) : (
                 <button onClick={() => setShowLogin(true)} className="btn btn-blue">
                   Login
@@ -361,9 +355,8 @@ export default function MediBookWebsiteLandingPage() {
                     {id.charAt(0).toUpperCase() + id.slice(1)}
                   </a>
                 ))}
-                {/* ✅ Login in mobile menu too */}
                 {user ? (
-                  <button onClick={signOut} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
+                  <button onClick={() => { signOut(); window.location.reload(); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
                     Sign Out
                   </button>
                 ) : (
