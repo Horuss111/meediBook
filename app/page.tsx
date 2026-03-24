@@ -17,8 +17,7 @@ export default function MediBookWebsiteLandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
-  const { user, profile, signOut } = useAuth();
-  const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 1800);
@@ -336,12 +335,7 @@ export default function MediBookWebsiteLandingPage() {
             <div className="top-actions">
               <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="btn btn-outline">WhatsApp</a>
               {user ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#93c5fd" }}>
-                    Hi, {displayName}
-                  </span>
-                  <UserMenu />
-                </div>
+                <UserMenu />
               ) : (
                 <button onClick={() => setShowLogin(true)} className="btn btn-blue">
                   Login
@@ -362,14 +356,9 @@ export default function MediBookWebsiteLandingPage() {
                   </a>
                 ))}
                 {user ? (
-                  <>
-                    <div style={{ padding: "12px 16px", color: "#93c5fd", fontWeight: 700 }}>
-                      Hi, {displayName}
-                    </div>
-                    <button onClick={() => { signOut(); window.location.reload(); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
-                      Sign Out
-                    </button>
-                  </>
+                  <button onClick={() => { signOut(); window.location.reload(); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
+                    Sign Out
+                  </button>
                 ) : (
                   <button onClick={() => { setShowLogin(true); setMobileMenuOpen(false); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#93c5fd", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
                     Login →
