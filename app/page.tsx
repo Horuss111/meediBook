@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import LoginModal from "@/components/LoginModal";
 import UserMenu from "@/components/UserMenu";
+import Link from "next/link";
 
 const APP_STORE_URL = "https://apps.apple.com/";
 const GOOGLE_PLAY_URL = "https://play.google.com/store/apps";
@@ -384,6 +385,9 @@ export default function MediBookWebsiteLandingPage() {
                   </h1>
                   <p className="hero-text">Inspired by cinematic product design, bold luxury interfaces, and 3D presentation, MediBook is built to feel new, premium, unforgettable, and instantly high-end.</p>
                   <div className="hero-buttons">
+                    <Link href="/doctors" className="btn btn-blue">
+                      Book Now
+                    </Link>
                     <a href="#download" className="btn btn-primary">Download App</a>
                     <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="btn btn-outline">Talk on WhatsApp</a>
                     <a href="#features" className="btn btn-outline">Explore Features</a>
