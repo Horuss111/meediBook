@@ -43,15 +43,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select("*")
         .eq("id", userId)
         .single();
-      if (data) setProfile(data);
+
+      if (data) {
+        setProfile(data);
+      } else {
+        setProfile(null);
+      }
     } catch (e) {
       console.error("fetchProfile error", e);
+      setProfile(null);
     }
   }
 
   async function refreshProfile() {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await fetchProfile(user.id);
+    if (user) {
+      await fetchProfile(user.id);
+    } else {
+      setProfile(null);
+    }
   }
 
   useEffect(() => {
