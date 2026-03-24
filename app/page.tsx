@@ -17,23 +17,8 @@ export default function MediBookWebsiteLandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
-  const { user, signOut } = useAuth();
-  const displayName =
-    user?.name ||
-    user?.full_name ||
-    user?.user_metadata?.name ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.username ||
-    user?.user_metadata?.display_name ||
-    user?.email?.split("@")[0] ||
-    "User";
-
-  const userInitials = displayName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
+  const { user, profile, signOut } = useAuth();
+  const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 1800);
@@ -98,80 +83,6 @@ export default function MediBookWebsiteLandingPage() {
         .nav a { padding: 8px 14px; border-radius: 10px; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 600; transition: color 0.2s ease, background 0.2s ease; }
         .nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
         .top-actions { display: flex; align-items: center; gap: 10px; }
-        .navbar-user-wrap { display: flex; align-items: center; gap: 12px; }
-        .navbar-user-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px 14px 8px 8px;
-          border-radius: 999px;
-          background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(59,130,246,0.1));
-          border: 1px solid rgba(147,197,253,0.18);
-          box-shadow: 0 12px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
-          transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-        }
-        .navbar-user-pill:hover {
-          transform: translateY(-1px);
-          border-color: rgba(147,197,253,0.32);
-          background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(59,130,246,0.16));
-        }
-        .navbar-user-avatar {
-          width: 34px;
-          height: 34px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: linear-gradient(135deg, #60a5fa 0%, #2563eb 55%, #1e3a8a 100%);
-          color: white;
-          font-family: 'Syne', sans-serif;
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.06em;
-          box-shadow: 0 10px 24px rgba(37,99,235,0.35);
-          flex-shrink: 0;
-        }
-        .navbar-user-meta {
-          display: flex;
-          flex-direction: column;
-          line-height: 1.05;
-        }
-        .navbar-user-label {
-          font-size: 10px;
-          color: rgba(147,197,253,0.72);
-          text-transform: uppercase;
-          letter-spacing: 0.16em;
-          font-weight: 700;
-        }
-        .navbar-user-name {
-          margin-top: 4px;
-          font-size: 14px;
-          font-weight: 800;
-          color: #dbeafe;
-          max-width: 150px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .mobile-user-card {
-          margin-top: 8px;
-          padding: 14px 16px;
-          border-radius: 14px;
-          background: rgba(59,130,246,0.08);
-          border: 1px solid rgba(147,197,253,0.14);
-        }
-        .mobile-user-card .hello {
-          font-size: 10px;
-          color: rgba(147,197,253,0.72);
-          text-transform: uppercase;
-          letter-spacing: 0.18em;
-          font-weight: 700;
-        }
-        .mobile-user-card .name {
-          margin-top: 6px;
-          color: #dbeafe;
-          font-size: 16px;
-          font-weight: 800;
-        }
 
         .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 12px 22px; font-size: 14px; font-weight: 700; font-family: 'Syne', sans-serif; transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease; cursor: pointer; border: none; }
         .btn:hover { transform: translateY(-2px); }
@@ -425,14 +336,10 @@ export default function MediBookWebsiteLandingPage() {
             <div className="top-actions">
               <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="btn btn-outline">WhatsApp</a>
               {user ? (
-                <div className="navbar-user-wrap">
-                  <div className="navbar-user-pill">
-                    <div className="navbar-user-avatar">{userInitials || "U"}</div>
-                    <div className="navbar-user-meta">
-                      <span className="navbar-user-label">Signed in</span>
-                      <span className="navbar-user-name">{displayName}</span>
-                    </div>
-                  </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#93c5fd" }}>
+                    Hi, {displayName}
+                  </span>
                   <UserMenu />
                 </div>
               ) : (
@@ -456,9 +363,8 @@ export default function MediBookWebsiteLandingPage() {
                 ))}
                 {user ? (
                   <>
-                    <div className="mobile-user-card">
-                      <div className="hello">Signed in</div>
-                      <div className="name">{displayName}</div>
+                    <div style={{ padding: "12px 16px", color: "#93c5fd", fontWeight: 700 }}>
+                      Hi, {displayName}
                     </div>
                     <button onClick={() => { signOut(); window.location.reload(); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
                       Sign Out

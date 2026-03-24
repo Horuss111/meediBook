@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient, hasSupabaseEnv } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -38,36 +38,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchProfile(userId: string) {
     try {
+      const supabase = getSupabaseClient();
       const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
-
-      if (data) {
-        setProfile(data);
-      } else {
-        setProfile(null);
-      }
+      if (data) setProfile(data);
     } catch (e) {
       console.error("fetchProfile error", e);
-      setProfile(null);
     }
   }
 
   async function refreshProfile() {
+    if (!hasSupabaseEnv()) return;
+    const supabase = getSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await fetchProfile(user.id);
-    } else {
-      setProfile(null);
-    }
+    if (user) await fetchProfile(user.id);
   }
 
   useEffect(() => {
     let mounted = true;
 
     async function init() {
+      if (!hasSupabaseEnv()) {
+        setLoading(false);
+        return;
+      }
+
+      const supabase = getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!mounted) return;
       setSession(session);
@@ -77,6 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     init();
+
+    if (!hasSupabaseEnv()) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const supabase = getSupabaseClient();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -100,6 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    if (!hasSupabaseEnv()) return;
+    const supabase = getSupabaseClient();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

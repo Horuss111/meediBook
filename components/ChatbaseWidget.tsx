@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient, hasSupabaseEnv } from "@/lib/supabase";
 
 export default function ChatbaseWidget() {
   const { user, profile } = useAuth();
@@ -11,7 +11,8 @@ export default function ChatbaseWidget() {
     async function initChatbase() {
       let userContext = "";
 
-      if (user && profile) {
+      if (user && profile && hasSupabaseEnv()) {
+        const supabase = getSupabaseClient();
         // Fetch appointments for this user
         const { data: appointments } = await supabase
           .from("appointments")

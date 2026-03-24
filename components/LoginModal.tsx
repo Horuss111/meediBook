@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient, hasSupabaseEnv } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 
 interface LoginModalProps {
@@ -19,7 +19,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   async function sendOTP() {
     if (!email.includes("@")) { setError("Please enter a valid email"); return; }
+    if (!hasSupabaseEnv()) { setError("Supabase environment variables are missing."); return; }
     setLoading(true); setError("");
+    const supabase = getSupabaseClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: true, emailRedirectTo: undefined }
@@ -31,7 +33,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   async function verifyOTP() {
     if (otp.length < 6) { setError("Enter the login code"); return; }
+    if (!hasSupabaseEnv()) { setError("Supabase environment variables are missing."); return; }
     setLoading(true); setError("");
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
     if (error) { setError(error.message); setLoading(false); return; }
 
@@ -53,7 +57,9 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   async function saveName() {
     if (!fullName.trim()) { setError("Please enter your name"); return; }
+    if (!hasSupabaseEnv()) { setError("Supabase environment variables are missing."); return; }
     setLoading(true); setError("");
+    const supabase = getSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from("profiles").upsert({ id: user.id, email: user.email, full_name: fullName.trim() });
