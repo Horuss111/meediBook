@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import LoginModal from "@/components/LoginModal";
 import UserMenu from "@/components/UserMenu";
@@ -18,12 +18,80 @@ export default function MediBookWebsiteLandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [showLogin, setShowLogin] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [scrollY, setScrollY] = useState(0);
+  const pageRef = useRef<HTMLDivElement | null>(null);
   const { user, signOut } = useAuth();
+  const displayName =
+    (user as any)?.name ||
+    (user as any)?.full_name ||
+    (user as any)?.user_metadata?.name ||
+    "User";
 
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 1800);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const updateScroll = () => {
+      setScrollY(window.scrollY);
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScroll);
+        ticking = true;
+      }
+    };
+
+    const onMouseMove = (event: MouseEvent) => {
+      const x = event.clientX / window.innerWidth;
+      const y = event.clientY / window.innerHeight;
+      const tiltX = (0.5 - y) * 4;
+      const tiltY = (x - 0.5) * 6;
+
+      if (pageRef.current) {
+        pageRef.current.style.setProperty("--mouse-x", x.toFixed(4));
+        pageRef.current.style.setProperty("--mouse-y", y.toFixed(4));
+        pageRef.current.style.setProperty("--stage-tilt-x", `${tiltX.toFixed(2)}deg`);
+        pageRef.current.style.setProperty("--stage-tilt-y", `${tiltY.toFixed(2)}deg`);
+        pageRef.current.style.setProperty("--implant-tilt-x", `${(tiltX * 0.35).toFixed(2)}deg`);
+        pageRef.current.style.setProperty("--implant-tilt-y", `${(tiltY * 0.55).toFixed(2)}deg`);
+        pageRef.current.style.setProperty("--feature-tilt-x", `${(tiltX * 0.45).toFixed(2)}deg`);
+        pageRef.current.style.setProperty("--feature-tilt-y", `${(tiltY * 0.45).toFixed(2)}deg`);
+      }
+    };
+
+    updateScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("mousemove", onMouseMove);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("mousemove", onMouseMove);
+    };
+  }, []);
+
+  const heroScroll = Math.min(scrollY / 900, 1);
+  const stageTransform = `perspective(1800px) rotateX(calc(10deg + var(--stage-tilt-x, 0deg))) rotateY(calc(-12deg + var(--stage-tilt-y, 0deg))) translateY(${heroScroll * -28}px) scale(${1 - heroScroll * 0.035})`;
+  const headlineTransform = `translate3d(0, ${heroScroll * -30}px, 0) scale(${1 - heroScroll * 0.04})`;
+  const copyTransform = `translate3d(0, ${heroScroll * -16}px, 0)`;
+  const implantTransform = `translate(-50%,-50%) rotateX(calc(6deg + var(--implant-tilt-x, 0deg))) rotateY(var(--implant-tilt-y, 0deg)) translateY(${heroScroll * -18}px)`;
+  const shellStyle = {
+    ["--scroll-progress" as string]: String(heroScroll),
+    ["--mouse-x" as string]: "0.5",
+    ["--mouse-y" as string]: "0.35",
+    ["--stage-tilt-x" as string]: "0deg",
+    ["--stage-tilt-y" as string]: "0deg",
+    ["--implant-tilt-x" as string]: "0deg",
+    ["--implant-tilt-y" as string]: "0deg",
+    ["--feature-tilt-x" as string]: "0deg",
+    ["--feature-tilt-y" as string]: "0deg",
+  } as CSSProperties;
 
   const features = [
     { icon: "⚡", title: "Fast Premium Booking", text: "Search doctors, compare specialists, and reserve appointments through a luxury healthcare experience built for speed and elegance." },
@@ -50,7 +118,7 @@ export default function MediBookWebsiteLandingPage() {
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #05070d; color: #ffffff; }
+        body { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; transition: background 0.3s ease, color 0.3s ease; overflow-x: hidden; }
         a { color: inherit; text-decoration: none; }
         button { font-family: inherit; cursor: pointer; }
         h1, h2, h3, h4 { font-family: 'Syne', ui-sans-serif, system-ui, sans-serif; }
@@ -62,21 +130,169 @@ export default function MediBookWebsiteLandingPage() {
 
         .page {
           min-height: 100vh;
+          position: relative;
+          isolation: isolate;
+          --mouse-x: 0.5;
+          --mouse-y: 0.35;
+          --stage-tilt-x: 0deg;
+          --stage-tilt-y: 0deg;
+          --implant-tilt-x: 0deg;
+          --implant-tilt-y: 0deg;
+          --feature-tilt-x: 0deg;
+          --feature-tilt-y: 0deg;
+        }
+        .page::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(circle at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.35) * 100%), rgba(96,165,250,0.14), transparent 22%),
+            linear-gradient(180deg, rgba(255,255,255,0.04), transparent 18%);
+          opacity: 0.9;
+          z-index: -1;
+        }
+        .page.dark {
           background:
             radial-gradient(circle at 12% 6%, rgba(59,130,246,0.14), transparent 24%),
             radial-gradient(circle at 88% 12%, rgba(37,99,235,0.12), transparent 20%),
             radial-gradient(circle at 50% 80%, rgba(29,78,216,0.08), transparent 30%),
             linear-gradient(180deg, #07111f 0%, #02050b 100%);
+          color: #ffffff;
+        }
+        .page.light {
+          background: #f8fafc;
+          color: #0b0b0b;
+        }
+        .page.light .topbar {
+          background: rgba(255,255,255,0.8);
+          border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .page.light .nav a {
+          color: rgba(0,0,0,0.6);
+        }
+        .page.light .nav a:hover {
+          color: #000;
+          background: rgba(0,0,0,0.05);
+        }
+        .page.light .brand-sub,
+        .page.light .hero-text,
+        .page.light .stat-label,
+        .page.light .section-text,
+        .page.light .feat-text,
+        .page.light .panel-text,
+        .page.light .testi-quote,
+        .page.light .faq-a,
+        .page.light .footer-links a,
+        .page.light .footer-contact a,
+        .page.light .footer-note,
+        .page.light .download-copy,
+        .page.light .footer-description,
+        .page.light .mobile-menu-inner a {
+          color: rgba(15,23,42,0.68);
+        }
+        .page.light .hero-title,
+        .page.light .section-title,
+        .page.light .feat-title,
+        .page.light .panel-title,
+        .page.light .testi-name,
+        .page.light .faq-q,
+        .page.light .download-title,
+        .page.light .brand-name {
+          color: #0f172a;
+        }
+        .page.light .section-label,
+        .page.light .panel-label,
+        .page.light .testi-role,
+        .page.light .pricing-eyebrow,
+        .page.light .pricing-note a,
+        .page.light .faq-q:hover,
+        .page.light .faq-item.open .faq-q,
+        .page.light .footer-note a {
+          color: #2563eb;
+        }
+        .page.light .btn-outline {
+          background: rgba(0,0,0,0.05);
+          color: #000;
+          border: 1px solid rgba(0,0,0,0.1);
+        }
+        .page.light .feat-card,
+        .page.light .testi-card,
+        .page.light .panel,
+        .page.light .footer-box,
+        .page.light .stat,
+        .page.light .download-strip,
+        .page.light .faq-item {
+          background: rgba(255,255,255,0.72);
+          border: 1px solid rgba(15,23,42,0.08);
+          box-shadow: 0 24px 70px rgba(148,163,184,0.18);
+        }
+        .page.light .testi-card,
+        .page.light .panel,
+        .page.light .footer-box {
+          background: rgba(255,255,255,0.72);
+        }
+        .page.light .topbar,
+        .page.light .mobile-toggle {
+          color: #0f172a;
+        }
+        .page.light .mobile-toggle {
+          background: rgba(15,23,42,0.04);
+          border-color: rgba(15,23,42,0.1);
+        }
+        .page.light .mobile-toggle:hover {
+          background: rgba(15,23,42,0.08);
+        }
+        .page.light .download-strip {
+          background: linear-gradient(135deg, rgba(255,255,255,0.94) 0%, rgba(239,246,255,0.96) 55%, rgba(219,234,254,0.96) 100%);
+        }
+        .page.light .store-btn-dark {
+          background: #0f172a;
+          color: #f8fafc;
+          border: 1px solid rgba(15,23,42,0.12);
+          box-shadow: 0 14px 32px rgba(15,23,42,0.16);
+        }
+        .page.light .store-btn-dark:hover {
+          background: #020617;
+          box-shadow: 0 18px 40px rgba(15,23,42,0.22);
+        }
+        .page.light .store-btn-sub {
+          opacity: 0.78;
+        }
+        .page.light .faq-chevron {
+          background: rgba(15,23,42,0.06);
+        }
+        .page.light .panel::after {
+          color: rgba(15,23,42,0.25);
+        }
+        .page.light .device-pill {
+          color: #dbeafe;
         }
         .container { width: min(1280px, calc(100% - 40px)); margin: 0 auto; }
 
-        .topbar { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(24px); background: rgba(5,7,13,0.78); border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .cursor-glow {
+          position: fixed;
+          left: calc(var(--mouse-x, 0.5) * 100%);
+          top: calc(var(--mouse-y, 0.35) * 100%);
+          width: 280px;
+          height: 280px;
+          border-radius: 50%;
+          pointer-events: none;
+          background: radial-gradient(circle, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.12) 26%, transparent 70%);
+          filter: blur(54px);
+          transform: translate(-50%, -50%);
+          z-index: 0;
+          opacity: 0.9;
+          transition: left 120ms ease-out, top 120ms ease-out;
+        }
+
+        .topbar { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(24px); background: rgba(5,7,13,0.68); border-bottom: 1px solid rgba(255,255,255,0.07); box-shadow: 0 18px 40px rgba(2,6,23,0.22); }
         .topbar-inner { display: flex; align-items: center; justify-content: space-between; min-height: 80px; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 14px; transition: opacity 0.2s ease; }
         .brand:hover { opacity: 0.85; }
         .brand-box { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: linear-gradient(135deg, #020617 0%, #0f172a 45%, #2563eb 100%); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 28px rgba(37,99,235,0.25); transition: box-shadow 0.2s ease, transform 0.2s ease; flex-shrink: 0; }
         .brand:hover .brand-box { box-shadow: 0 14px 36px rgba(37,99,235,0.42); transform: scale(1.04); }
-        .brand-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.04em; }
+        .brand-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.04em; color: inherit; }
         .brand-sub { font-size: 10px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.22em; margin-top: 2px; }
 
         .nav { display: flex; align-items: center; gap: 6px; }
@@ -101,31 +317,42 @@ export default function MediBookWebsiteLandingPage() {
         .mobile-menu-inner a { padding: 12px 16px; border-radius: 12px; color: rgba(255,255,255,0.72); font-size: 15px; font-weight: 600; transition: background 0.2s ease, color 0.2s ease; }
         .mobile-menu-inner a:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
-        .hero { padding: 56px 0 120px; }
+        .hero { padding: 56px 0 120px; position: relative; }
+        .hero::before { content: ""; position: absolute; inset: 0 0 auto; height: 680px; background: radial-gradient(circle at 70% 26%, rgba(96,165,250,0.16), transparent 30%), radial-gradient(circle at 18% 8%, rgba(59,130,246,0.12), transparent 28%); pointer-events: none; }
         .eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px; border-radius: 999px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.22); color: #93c5fd; font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; transition: border-color 0.2s ease, background 0.2s ease; }
         .eyebrow:hover { background: rgba(59,130,246,0.14); border-color: rgba(59,130,246,0.38); }
         .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 14px rgba(59,130,246,0.9); animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 14px rgba(59,130,246,0.9); } 50% { box-shadow: 0 0 28px rgba(59,130,246,1), 0 0 0 6px rgba(59,130,246,0.15); } }
 
         .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 28px; align-items: start; }
-        .hero-copy { max-width: 780px; }
-        .hero-title { font-family: 'Syne', sans-serif; font-size: clamp(36px,6vw,108px); line-height: 0.95; letter-spacing: -0.06em; font-weight: 900; }
+        .hero-copy { max-width: 780px; position: relative; z-index: 2; }
+        .hero-title { font-family: 'Syne', sans-serif; font-size: clamp(36px,6vw,108px); line-height: 0.95; letter-spacing: -0.06em; font-weight: 900; will-change: transform, opacity; text-wrap: balance; }
         .hero-highlight { background: linear-gradient(90deg, #dbeafe 0%, #60a5fa 40%, #2563eb 100%); -webkit-background-clip: text; background-clip: text; color: transparent; display: inline; }
-        .hero-text { margin-top: 28px; color: rgba(255,255,255,0.62); font-size: 19px; line-height: 1.85; }
+        .hero-text { margin-top: 28px; color: rgba(255,255,255,0.62); font-size: 19px; line-height: 1.85; will-change: transform; max-width: 680px; }
         .hero-buttons { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 36px; }
 
         .hero-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 48px; max-width: 760px; }
-        .stat { border-radius: 22px; padding: 22px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); box-shadow: 0 18px 48px rgba(0,0,0,0.22); transition: all 0.25s ease; display: block; }
-        .stat:hover { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.28); transform: translateY(-4px); box-shadow: 0 24px 60px rgba(59,130,246,0.18); }
+        .stat { border-radius: 22px; padding: 22px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 18px 48px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06); transition: all 0.35s ease; display: block; backdrop-filter: blur(16px); transform-style: preserve-3d; }
+        .stat:hover { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.28); transform: translateY(-6px) perspective(900px) rotateX(7deg); box-shadow: 0 24px 60px rgba(59,130,246,0.18); }
         .stat-value { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 900; letter-spacing: -0.05em; }
         .stat-label { margin-top: 6px; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; }
 
-        .hero-stage-wrap { margin-top: 0; }
+        .hero-stage-wrap { margin-top: 0; position: relative; perspective: 2200px; }
         .hero-stage-glow { position: relative; }
-        .hero-stage-glow::before { content: ""; position: absolute; inset: -40px; background: radial-gradient(circle at center, rgba(37,99,235,0.22), transparent 55%); filter: blur(40px); z-index: 0; }
-        .hero-stage { position: relative; z-index: 1; border-radius: 40px; padding: 12px; background: #080f1c; border: 1px solid rgba(255,255,255,0.07); box-shadow: 0 48px 120px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); transition: box-shadow 0.3s ease; }
+        .hero-stage-glow::before { content: ""; position: absolute; inset: -60px; background: radial-gradient(circle at center, rgba(37,99,235,0.2), transparent 52%), radial-gradient(circle at 70% 20%, rgba(125,211,252,0.12), transparent 22%); filter: blur(44px); z-index: 0; }
+        .hero-stage { position: relative; z-index: 1; border-radius: 40px; padding: 12px; background: linear-gradient(180deg, rgba(15,23,42,0.92), rgba(2,6,23,0.98)); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 48px 120px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); transition: box-shadow 0.3s ease, transform 0.22s ease-out; transform-style: preserve-3d; will-change: transform; }
         .hero-stage:hover { box-shadow: 0 56px 140px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.05); }
-        .device-frame { position: relative; overflow: hidden; border-radius: 32px; min-height: 720px; background: linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(135deg, #020617 0%, #0c1731 42%, #1e40af 100%); background-size: 33.333% 100%, 100% 100%, 100% 100%; border: 1px solid rgba(255,255,255,0.07); }
+        .hero-orbit { position: absolute; inset: 7% 8%; border-radius: 40px; pointer-events: none; border: 1px solid rgba(147,197,253,0.08); transform-style: preserve-3d; }
+        .hero-orbit::before, .hero-orbit::after { content: ""; position: absolute; inset: 12% 13%; border-radius: 50%; border: 1px solid rgba(125,211,252,0.16); transform: rotateX(74deg); }
+        .hero-orbit::after { inset: 23% 24%; opacity: 0.75; }
+        .hero-float-card { position: absolute; z-index: 4; border-radius: 22px; padding: 16px 18px; background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04)); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(16px); box-shadow: 0 22px 50px rgba(0,0,0,0.28); max-width: 220px; transform-style: preserve-3d; }
+        .hero-float-card strong { display: block; font-family: 'Syne', sans-serif; font-size: 15px; letter-spacing: -0.03em; }
+        .hero-float-card span { display: block; margin-top: 6px; font-size: 12px; color: rgba(219,234,254,0.68); line-height: 1.55; }
+        .hero-float-card.one { top: 86px; left: -28px; }
+        .hero-float-card.two { right: -12px; bottom: 74px; }
+        .device-frame { position: relative; overflow: hidden; border-radius: 32px; min-height: 720px; background: linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(135deg, #020617 0%, #0c1731 42%, #1e40af 100%); background-size: 33.333% 100%, 100% 100%, 100% 100%; border: 1px solid rgba(255,255,255,0.07); transform-style: preserve-3d; }
+        .device-frame::before { content: ""; position: absolute; inset: -20% auto auto -10%; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(125,211,252,0.22), transparent 64%); filter: blur(40px); opacity: 0.9; }
+        .device-frame::after { content: ""; position: absolute; right: -80px; bottom: -140px; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(59,130,246,0.22), transparent 68%); filter: blur(28px); }
         .device-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 170px; height: 32px; background: #060a12; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; z-index: 3; }
         .device-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 28px 32px 0; color: rgba(239,246,255,0.9); position: relative; z-index: 2; }
         .device-brand { display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.04em; transition: opacity 0.2s ease; }
@@ -136,7 +363,7 @@ export default function MediBookWebsiteLandingPage() {
         .device-nav span:hover { color: rgba(219,234,254,0.95); }
         .device-pill { padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.03); font-size: 13px; font-weight: 600; transition: background 0.2s ease, border-color 0.2s ease; white-space: nowrap; }
         .device-pill:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.35); }
-        .device-content { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 24px; padding: 32px 32px 28px; min-height: 640px; position: relative; z-index: 2; }
+        .device-content { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 24px; padding: 32px 32px 28px; min-height: 640px; position: relative; z-index: 2; transform-style: preserve-3d; }
         .device-copy { display: flex; flex-direction: column; justify-content: space-between; }
         .device-intro { max-width: 300px; color: rgba(219,234,254,0.72); font-size: 20px; line-height: 1.4; font-weight: 300; }
         .device-headline { margin-top: 68px; max-width: 500px; font-family: 'Syne', sans-serif; font-size: clamp(52px,6vw,90px); line-height: 0.92; letter-spacing: -0.065em; font-weight: 300; color: #dbeafe; }
@@ -147,51 +374,55 @@ export default function MediBookWebsiteLandingPage() {
         .device-footer-item span { display: block; margin-top: 4px; font-size: 11px; color: rgba(191,219,254,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
         .device-visual { display: grid; grid-template-columns: 1fr 230px; gap: 16px; align-items: stretch; }
 
-        .implant-zone { position: relative; min-height: 520px; border-radius: 26px; background: linear-gradient(180deg, rgba(96,165,250,0.07), rgba(2,6,23,0.18)); overflow: hidden; }
+        .implant-zone { position: relative; min-height: 520px; border-radius: 26px; background: linear-gradient(180deg, rgba(96,165,250,0.07), rgba(2,6,23,0.18)); overflow: hidden; transform-style: preserve-3d; }
+        .implant-zone::before { content: ""; position: absolute; inset: 16px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 30%); }
+        .implant-zone::after { content: ""; position: absolute; inset: auto 18% 14% 18%; height: 90px; border-radius: 999px; background: radial-gradient(circle, rgba(96,165,250,0.16), transparent 68%); filter: blur(22px); transform: rotateX(82deg); }
         .implant-glow { position: absolute; left: 50%; bottom: 90px; transform: translateX(-50%); width: 200px; height: 70px; background: radial-gradient(circle, rgba(59,130,246,0.32), transparent 70%); filter: blur(16px); }
         .implant-shadow { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); width: 150px; height: 20px; border-radius: 999px; background: rgba(0,0,0,0.26); filter: blur(10px); }
-        .implant { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); animation: floatLuxury 6s ease-in-out infinite; }
+        .implant-motion { position: absolute; left: 50%; top: 50%; animation: floatLuxury 6s ease-in-out infinite; transform-style: preserve-3d; }
+        .implant { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); transform-style: preserve-3d; will-change: transform; transition: transform 0.2s ease-out; }
         .implant-tooth { width: 136px; height: 160px; border-radius: 44% 44% 36% 36% / 30% 30% 46% 46%; background: radial-gradient(circle at 34% 28%, #f0f8ff 0%, #dbeafe 34%, #60a5fa 68%, #1e3a8a 100%); box-shadow: inset -12px -18px 28px rgba(15,23,42,0.28), 0 18px 42px rgba(96,165,250,0.18); }
         .implant-neck { width: 84px; height: 22px; margin: -5px auto 0; border-radius: 999px; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); }
         .implant-screw { width: 74px; height: 260px; margin: 0 auto; border-radius: 16px 16px 40px 40px; background: repeating-linear-gradient(to bottom, #1d4ed8 0px, #1d4ed8 7px, #0f172a 7px, #0f172a 15px); box-shadow: inset 8px 0 18px rgba(125,211,252,0.16), inset -8px 0 18px rgba(2,6,23,0.28), 0 14px 32px rgba(0,0,0,0.3); }
 
         .side-cards { display: grid; gap: 12px; }
-        .doctor-card { overflow: hidden; border-radius: 22px; border: 1px solid rgba(255,255,255,0.07); background: rgba(10,10,10,0.2); min-height: 158px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease; }
-        .doctor-card:hover { border-color: rgba(59,130,246,0.35); transform: scale(1.02); box-shadow: 0 16px 40px rgba(59,130,246,0.2); }
+        .doctor-card { overflow: hidden; border-radius: 22px; border: 1px solid rgba(255,255,255,0.07); background: rgba(10,10,10,0.2); min-height: 158px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease; transform-style: preserve-3d; }
+        .doctor-card:hover { border-color: rgba(59,130,246,0.35); transform: perspective(900px) rotateY(-10deg) translateY(-4px) scale(1.02); box-shadow: 0 16px 40px rgba(59,130,246,0.2); }
         .doctor-portrait { position: absolute; inset: 0; background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.13), transparent 26%), linear-gradient(180deg, #172033 0%, #08111f 62%, #04070d 100%); }
         .doctor-portrait.light { background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.16), transparent 26%), linear-gradient(180deg, #24314a 0%, #0b1320 64%, #04070d 100%); }
         .doctor-info { position: relative; z-index: 1; padding: 14px; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%); }
         .doctor-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
         .doctor-role { margin-top: 3px; color: rgba(147,197,253,0.75); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
 
-        .section { padding: 100px 0; }
+        .section { padding: 100px 0; position: relative; }
+        .section::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.015) 50%, transparent 100%); }
         .section-head { max-width: 860px; }
         .section-label { color: #93c5fd; font-size: 11px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
         .section-title { margin: 14px 0 0; font-family: 'Syne', sans-serif; font-size: clamp(28px,4vw,58px); line-height: 1.05; letter-spacing: -0.04em; font-weight: 900; }
         .section-text { margin-top: 18px; max-width: 760px; color: rgba(255,255,255,0.6); font-size: 18px; line-height: 1.9; }
 
         .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 48px; }
-        .feat-card { border-radius: 26px; padding: 26px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden; }
+        .feat-card { border-radius: 26px; padding: 26px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.35s ease; position: relative; overflow: hidden; transform-style: preserve-3d; backdrop-filter: blur(18px); }
         .feat-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.1), transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
         .feat-card:hover::before, .feat-card.active::before { opacity: 1; }
-        .feat-card:hover, .feat-card.active { background: rgba(59,130,246,0.07); border-color: rgba(59,130,246,0.28); transform: translateY(-6px); box-shadow: 0 30px 70px rgba(59,130,246,0.18); }
+        .feat-card:hover, .feat-card.active { background: rgba(59,130,246,0.07); border-color: rgba(59,130,246,0.28); transform: perspective(1000px) rotateX(6deg) rotateY(-5deg) translateY(-10px); box-shadow: 0 30px 70px rgba(59,130,246,0.18); }
         .feat-icon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); font-size: 22px; box-shadow: 0 10px 28px rgba(59,130,246,0.35); transition: transform 0.2s ease; }
         .feat-card:hover .feat-icon { transform: scale(1.1) rotate(-4deg); }
         .feat-title { margin-top: 20px; font-family: 'Syne', sans-serif; font-size: 22px; line-height: 1.1; letter-spacing: -0.03em; font-weight: 800; }
         .feat-text { margin-top: 12px; color: rgba(255,255,255,0.58); font-size: 15px; line-height: 1.85; }
 
         .split-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
-        .panel { border-radius: 30px; padding: 34px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden; }
+        .panel { border-radius: 30px; padding: 34px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; transform-style: preserve-3d; }
         .panel::after { content: "→"; position: absolute; bottom: 28px; right: 28px; font-size: 20px; color: rgba(255,255,255,0.2); transition: color 0.2s ease, transform 0.2s ease; }
         .panel:hover::after { color: #60a5fa; transform: translateX(4px); }
-        .panel:hover { background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.24); transform: translateY(-4px); }
+        .panel:hover { background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.24); transform: perspective(1000px) rotateX(5deg) rotateY(-4deg) translateY(-6px); }
         .panel-label { color: #93c5fd; font-size: 11px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
         .panel-title { margin-top: 12px; font-family: 'Syne', sans-serif; font-size: clamp(22px,2.5vw,30px); line-height: 1.1; letter-spacing: -0.04em; font-weight: 900; }
         .panel-text { margin-top: 14px; color: rgba(255,255,255,0.58); font-size: 15px; line-height: 1.85; }
 
         .testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 48px; }
-        .testi-card { border-radius: 28px; padding: 30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.25s ease; display: block; }
-        .testi-card:hover { background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.24); transform: translateY(-5px); box-shadow: 0 30px 70px rgba(59,130,246,0.16); }
+        .testi-card { border-radius: 28px; padding: 30px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.3s ease; display: block; transform-style: preserve-3d; }
+        .testi-card:hover { background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.24); transform: perspective(1000px) rotateX(5deg) rotateY(-4deg) translateY(-8px); box-shadow: 0 30px 70px rgba(59,130,246,0.16); }
         .testi-stars { display: flex; gap: 4px; margin-bottom: 18px; }
         .testi-star { color: #fbbf24; font-size: 15px; transition: transform 0.15s ease; }
         .testi-star:hover { transform: scale(1.3); }
@@ -200,7 +431,7 @@ export default function MediBookWebsiteLandingPage() {
         .testi-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; }
         .testi-role { font-size: 12px; color: rgba(147,197,253,0.65); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
 
-        .pricing-section { padding: 100px 0; position: relative; overflow: hidden; background: linear-gradient(180deg, #080808 0%, #020b18 40%, #030f22 70%, #080808 100%); }
+        .pricing-section { padding: 100px 0; position: relative; overflow: hidden; background: linear-gradient(180deg, #080808 0%, #020b18 40%, #030f22 70%, #080808 100%); perspective: 1200px; }
         .pricing-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,120,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,120,255,0.06) 1px, transparent 1px); background-size: 48px 48px; z-index: 0; }
         .pricing-glow { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); width: 800px; height: 320px; background: radial-gradient(ellipse, rgba(0,100,255,0.15) 0%, transparent 70%); filter: blur(50px); z-index: 0; }
         .pricing-inner { position: relative; z-index: 1; }
@@ -229,8 +460,8 @@ export default function MediBookWebsiteLandingPage() {
         .faq-a { padding: 0 24px; max-height: 0; overflow: hidden; color: rgba(255,255,255,0.62); font-size: 15px; line-height: 1.85; transition: max-height 0.4s ease, padding 0.3s ease; }
         .faq-item.open .faq-a { max-height: 200px; padding-bottom: 22px; }
 
-        .download-strip { border-radius: 38px; padding: 48px; background: linear-gradient(135deg, #020617 0%, #08111f 55%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 30px 70px rgba(0,0,0,0.32); display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-        .download-strip:hover { border-color: rgba(59,130,246,0.24); box-shadow: 0 40px 90px rgba(0,0,0,0.4), 0 0 0 1px rgba(59,130,246,0.12); }
+        .download-strip { border-radius: 38px; padding: 48px; background: linear-gradient(135deg, #020617 0%, #08111f 55%, #0f172a 100%); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 30px 70px rgba(0,0,0,0.32); display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.3s ease; transform-style: preserve-3d; }
+        .download-strip:hover { border-color: rgba(59,130,246,0.24); box-shadow: 0 40px 90px rgba(0,0,0,0.4), 0 0 0 1px rgba(59,130,246,0.12); transform: perspective(1100px) rotateX(4deg) translateY(-6px); }
         .download-buttons { display: flex; flex-wrap: wrap; gap: 14px; }
         .store-btn { display: inline-flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 16px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; transition: all 0.22s ease; cursor: pointer; border: none; }
         .store-btn:hover { transform: translateY(-3px); }
@@ -244,7 +475,7 @@ export default function MediBookWebsiteLandingPage() {
         .store-btn-label { font-size: 15px; font-weight: 800; margin-top: 1px; }
 
         .footer-wrap { padding: 0 0 40px; }
-        .footer-box { border-radius: 32px; padding: 40px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+        .footer-box { border-radius: 32px; padding: 40px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.07); box-shadow: 0 26px 60px rgba(2,6,23,0.18); backdrop-filter: blur(18px); }
         .footer-grid { display: grid; grid-template-columns: 1.4fr 0.8fr 0.8fr; gap: 36px; }
         .footer-links { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
         .footer-links a { color: rgba(255,255,255,0.55); font-size: 14px; font-weight: 500; padding: 7px 10px; border-radius: 8px; margin-left: -10px; transition: color 0.2s ease, background 0.2s ease; display: inline-block; }
@@ -316,7 +547,8 @@ export default function MediBookWebsiteLandingPage() {
       {showSplash && <SplashOverlay />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
 
-      <div className="page">
+      <div ref={pageRef} className={`page ${darkMode ? "dark" : "light"}`} style={shellStyle}>
+        <div id="cursorGlow" className="cursor-glow"></div>
         <header className="topbar">
           <div className="container topbar-inner">
             <a href="#home" className="brand">
@@ -331,12 +563,18 @@ export default function MediBookWebsiteLandingPage() {
                 <a key={id} href={`#${id}`}>{id.charAt(0).toUpperCase() + id.slice(1)}</a>
               ))}
             </nav>
-
-            {/* ✅ UPDATED: Professional UserMenu dropdown when logged in */}
+            
             <div className="top-actions">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="btn btn-outline"
+                style={{ padding: "10px 16px" }}
+              >
+                {darkMode ? "☀ Light" : "🌙 Dark"}
+              </button>
               <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="btn btn-outline">WhatsApp</a>
               {user ? (
-                <UserMenu />
+                <UserMenu  />
               ) : (
                 <button onClick={() => setShowLogin(true)} className="btn btn-blue">
                   Login
@@ -357,9 +595,14 @@ export default function MediBookWebsiteLandingPage() {
                   </a>
                 ))}
                 {user ? (
-                  <button onClick={() => { signOut(); window.location.reload(); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
-                    Sign Out
-                  </button>
+                  <>
+                    <div style={{ padding: "12px 16px", color: darkMode ? "#fff" : "#0b0b0b", fontWeight: 600 }}>
+                      {displayName}
+                    </div>
+                    <button onClick={() => { signOut(); window.location.reload(); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#f87171", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
+                      Sign Out
+                    </button>
+                  </>
                 ) : (
                   <button onClick={() => { setShowLogin(true); setMobileMenuOpen(false); }} style={{ textAlign: "left", padding: "12px 16px", borderRadius: 12, color: "#93c5fd", background: "transparent", border: "none", fontSize: 15, fontWeight: 600 }}>
                     Login →
@@ -378,8 +621,8 @@ export default function MediBookWebsiteLandingPage() {
                 Ultra luxury medical interface
               </a>
               <div className="hero-grid">
-                <div className="hero-copy">
-                  <h1 className="hero-title">
+                <div className="hero-copy" style={{ transform: copyTransform }}>
+                  <h1 className="hero-title" style={{ transform: headlineTransform, opacity: 1 - heroScroll * 0.18 }}>
                     Modern care,<br />designed to{" "}
                     <span className="hero-highlight">impress.</span>
                   </h1>
@@ -400,7 +643,22 @@ export default function MediBookWebsiteLandingPage() {
                 </div>
                 <div className="hero-stage-wrap">
                   <div className="hero-stage-glow">
-                    <div className="hero-stage">
+                    <div className="hero-stage" style={{ transform: stageTransform }}>
+                      <div className="hero-orbit" />
+                      <div
+                        className="hero-float-card one"
+                        style={{ transform: `translate3d(0, ${heroScroll * -14}px, 40px) rotateY(12deg)` }}
+                      >
+                        <strong>Doctor discovery</strong>
+                        <span>Verified specialists, visible availability, and a clearer booking starting point.</span>
+                      </div>
+                      <div
+                        className="hero-float-card two"
+                        style={{ transform: `translate3d(0, ${heroScroll * -22}px, 70px) rotateY(-10deg)` }}
+                      >
+                        <strong>Patient follow-up</strong>
+                        <span>Appointments, reminders, and support presented in one calm premium surface.</span>
+                      </div>
                       <div className="device-frame">
                         <div className="device-notch" />
                         <div className="device-topbar">
@@ -428,10 +686,12 @@ export default function MediBookWebsiteLandingPage() {
                             <div className="implant-zone">
                               <div className="implant-glow" />
                               <div className="implant-shadow" />
-                              <div className="implant">
-                                <div className="implant-tooth" />
-                                <div className="implant-neck" />
-                                <div className="implant-screw" />
+                              <div className="implant-motion">
+                                <div className="implant" style={{ transform: implantTransform }}>
+                                  <div className="implant-tooth" />
+                                  <div className="implant-neck" />
+                                  <div className="implant-screw" />
+                                </div>
                               </div>
                             </div>
                             <div className="side-cards">
@@ -458,7 +718,19 @@ export default function MediBookWebsiteLandingPage() {
               </div>
               <div className="features-grid">
                 {features.map((f, i) => (
-                  <div key={f.title} className={`feat-card${activeFeature === i ? " active" : ""}`} onClick={() => setActiveFeature(i)} role="button" tabIndex={0}>
+                  <div
+                    key={f.title}
+                    className={`feat-card${activeFeature === i ? " active" : ""}`}
+                    onClick={() => setActiveFeature(i)}
+                    role="button"
+                    tabIndex={0}
+                    style={{
+                      transform:
+                        activeFeature === i
+                          ? `perspective(1000px) rotateX(calc(6deg + var(--feature-tilt-x, 0deg))) rotateY(calc(-5deg + var(--feature-tilt-y, 0deg))) translateY(-10px)`
+                          : undefined,
+                    }}
+                  >
                     <div className="feat-icon">{f.icon}</div>
                     <div className="feat-title">{f.title}</div>
                     <p className="feat-text">{f.text}</p>
@@ -555,10 +827,10 @@ export default function MediBookWebsiteLandingPage() {
               <div className="download-strip">
                 <div>
                   <div className="section-label">Download App</div>
-                  <h2 style={{fontFamily:"'Syne',sans-serif",margin:"12px 0 0",fontSize:"clamp(22px,3vw,42px)",fontWeight:900,letterSpacing:"-0.04em",lineHeight:1.1}}>
+                  <h2 className="download-title" style={{fontFamily:"'Syne',sans-serif",margin:"12px 0 0",fontSize:"clamp(22px,3vw,42px)",fontWeight:900,letterSpacing:"-0.04em",lineHeight:1.1}}>
                     Bring the premium MediBook<br />experience to every patient.
                   </h2>
-                  <p style={{marginTop:14,color:"rgba(255,255,255,0.55)",fontSize:16,lineHeight:1.85,maxWidth:480}}>
+                  <p className="download-copy" style={{marginTop:14,fontSize:16,lineHeight:1.85,maxWidth:480}}>
                     Download the app to discover doctors, book appointments, manage care, and enjoy the same elegant experience as the website.
                   </p>
                 </div>
@@ -586,7 +858,7 @@ export default function MediBookWebsiteLandingPage() {
                     <div className="brand-box"><BrandMark /></div>
                     <div><div className="brand-name">MediBook</div><div className="brand-sub">Ultra luxury healthcare</div></div>
                   </a>
-                  <p style={{marginTop:18,color:"rgba(219,234,254,0.55)",lineHeight:1.85,fontSize:15,maxWidth:300}}>
+                  <p className="footer-description" style={{marginTop:18,lineHeight:1.85,fontSize:15,maxWidth:300}}>
                     Premium digital healthcare platform delivering elegant booking, modern clinic presence, and a luxury patient experience.
                   </p>
                   <div style={{marginTop:20,display:"flex",gap:12,flexWrap:"wrap"}}>

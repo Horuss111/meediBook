@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 type Doctor = {
   id: number;
@@ -78,6 +79,11 @@ const doctors: Doctor[] = [
   },
 ];
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function DoctorsPage() {
   const [search, setSearch] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
@@ -88,22 +94,66 @@ export default function DoctorsPage() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
 
+  const [darkMode, setDarkMode] = useState(true);
+  const pageRef = useRef<HTMLDivElement | null>(null);
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      if (pageRef.current) {
+        pageRef.current.style.setProperty("--mouse-x", x.toFixed(4));
+        pageRef.current.style.setProperty("--mouse-y", y.toFixed(4));
+      }
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, []);
+
   const filteredDoctors = doctors.filter((doc) =>
     doc.name.toLowerCase().includes(search.toLowerCase()) ||
     doc.specialty.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (typeof window !== "undefined" && window.location.pathname === "/admin") {
+    return <AdminDashboard />;
+  }
+
   return (
     <div
+      ref={pageRef}
+      className={`page ${darkMode ? "dark" : "light"}`}
       style={{
         minHeight: "100vh",
         padding: "100px 20px",
         background:
-          "radial-gradient(circle at top, rgba(59,130,246,0.15), transparent 40%), #020617",
-        color: "#fff",
+          darkMode
+            ? "radial-gradient(circle at top, rgba(59,130,246,0.15), transparent 40%), #020617"
+            : "#f8fafc",
+        color: darkMode ? "#fff" : "#0b0b0b",
+        transition: "0.3s"
       }}
     >
       <div style={{ maxWidth: "1200px", margin: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            style={{
+              padding: "10px 16px",
+              borderRadius: "12px",
+              border: "none",
+              background: darkMode ? "#fff" : "#020617",
+              color: darkMode ? "#000" : "#fff",
+              fontWeight: 700,
+              cursor: "pointer"
+            }}
+          >
+            {darkMode ? "☀ Light" : "🌙 Dark"}
+          </button>
+        </div>
         
         {/* Header */}
         <h1
@@ -161,8 +211,9 @@ export default function DoctorsPage() {
               style={{
                 padding: "24px",
                 borderRadius: "24px",
-                background:
-                  "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+                background: darkMode
+                  ? "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))"
+                  : "linear-gradient(145deg, #ffffff, #e2e8f0)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 backdropFilter: "blur(20px)",
                 transition: "0.3s",
@@ -275,10 +326,12 @@ export default function DoctorsPage() {
         >
           <div
             style={{
-              background: "#020617",
+              background: darkMode ? "#020617" : "#ffffff",
+              color: darkMode ? "#fff" : "#000",
               padding: "30px",
               borderRadius: "20px",
               width: "400px",
+              position: "relative",
             }}
           >
             <h2 style={{ marginBottom: "10px" }}>
@@ -346,6 +399,57 @@ export default function DoctorsPage() {
             />
 
             <button
+              onClick={async () => {
+                if (!patientName || !phone || !date || !time) {
+                  alert("Please fill all fields");
+                  return;
+                }
+
+                setLoading(true);
+
+                // prevent duplicate booking
+                const { data: existing } = await supabase
+                  .from("appointments")
+                  .select("*")
+                  .eq("doctor_name", selectedDoctor?.name)
+                  .eq("date", date)
+                  .eq("time", time);
+
+                if (existing && existing.length > 0) {
+                  setLoading(false);
+                  alert("⚠️ This time slot is already booked");
+                  return;
+                }
+
+                const { error } = await supabase.from("appointments").insert([
+                  {
+                    doctor_name: selectedDoctor?.name,
+                    patient_name: patientName,
+                    phone: phone,
+                    date: date,
+                    time: time,
+                  },
+                ]);
+
+                setLoading(false);
+
+                if (error) {
+                  console.error(error);
+                  alert("❌ Booking failed");
+                } else {
+                  setSuccess(true);
+
+                  // WhatsApp auto message
+                  const message = `Hello 👋\nYour booking is confirmed ✅\nDoctor: ${selectedDoctor?.name}\nDate: ${date} ${time}`;
+                  const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                  window.open(whatsappURL, "_blank");
+
+                  setTimeout(() => {
+                    setShowModal(false);
+                    setSuccess(false);
+                  }, 2500);
+                }
+              }}
               style={{
                   marginTop: "18px",
                   width: "100%",
@@ -359,9 +463,11 @@ export default function DoctorsPage() {
                   cursor: "pointer",
                   transition: "0.3s",
                   boxShadow: "0 10px 30px rgba(59,130,246,0.3)",
+                  opacity: loading ? 0.7 : 1,
               }}
+              disabled={loading}
             >
-              Confirm Booking
+              {loading ? "Processing..." : "Confirm Booking"}
             </button>
 
             <button
@@ -383,9 +489,143 @@ export default function DoctorsPage() {
             >
               Cancel
             </button>
+
+            {success && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "rgba(0,0,0,0.85)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "20px",
+                  zIndex: 10,
+                }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <div
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg,#22c55e,#16a34a)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "40px",
+                      margin: "auto",
+                      boxShadow: "0 0 40px rgba(34,197,94,0.6)",
+                    }}
+                  >
+                    ✓
+                  </div>
+                  <h2 style={{ marginTop: "20px" }}>Booking Confirmed</h2>
+                  <p style={{ opacity: 0.6 }}>Redirecting...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
+      <div
+        style={{
+          position: "fixed",
+          left: "calc(var(--mouse-x, 0.5) * 100%)",
+          top: "calc(var(--mouse-y, 0.5) * 100%)",
+          width: "300px",
+          height: "300px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(59,130,246,0.2), transparent 70%)",
+          filter: "blur(80px)",
+          transform: "translate(-50%, -50%)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+    </div>
+  );
+}
+// --- AdminDashboard component ---
+import React from "react";
+function AdminDashboard() {
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loadingDash, setLoadingDash] = useState(true);
+
+  useEffect(() => {
+    fetchAppointments();
+    // eslint-disable-next-line
+  }, []);
+
+  const fetchAppointments = async () => {
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setAppointments(data);
+    }
+    setLoadingDash(false);
+  };
+
+  const deleteAppointment = async (id: string) => {
+    await supabase.from("appointments").delete().eq("id", id);
+    fetchAppointments();
+  };
+
+  if (loadingDash) {
+    return <div style={{ padding: 40 }}>Loading dashboard...</div>;
+  }
+
+  return (
+    <div style={{ padding: 40 }}>
+      <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 20 }}>
+        📊 Admin Dashboard
+      </h1>
+
+      <div style={{ display: "grid", gap: 16 }}>
+        {appointments.map((a) => (
+          <div
+            key={a.id}
+            style={{
+              padding: 20,
+              borderRadius: 16,
+              background: "#020617",
+              border: "1px solid rgba(255,255,255,0.1)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 800 }}>{a.patient_name}</div>
+              <div style={{ opacity: 0.6 }}>{a.phone}</div>
+              <div style={{ color: "#3b82f6" }}>{a.doctor_name}</div>
+              <div style={{ fontSize: 13, opacity: 0.6 }}>
+                {a.date} • {a.time}
+              </div>
+            </div>
+
+            <button
+              onClick={() => deleteAppointment(a.id)}
+              style={{
+                background: "#ef4444",
+                border: "none",
+                padding: "10px 14px",
+                borderRadius: 10,
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
