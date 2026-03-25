@@ -95,7 +95,6 @@ export default function DoctorsPage() {
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [telegramId, setTelegramId] = useState("");
 
   const [darkMode, setDarkMode] = useState(true);
   const pageRef = useRef<HTMLDivElement | null>(null);
@@ -420,32 +419,24 @@ export default function DoctorsPage() {
                 borderRadius: "8px"
               }}
             />
-            <input
-              placeholder="Telegram ID (get it from @userinfobot)"
-              value={telegramId}
-              onChange={(e) => setTelegramId(e.target.value)}
+            {/* Telegram connect button */}
+            <a
+              href="https://t.me/meedibook_bot?start=medibook"
+              target="_blank"
               style={{
-                width: "100%",
-                marginTop: "10px",
+                display: "block",
+                textAlign: "center",
+                marginTop: "12px",
                 padding: "10px",
-                background: "#0f172a",
-                color: "#ffffff",
-                border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: "8px"
+                borderRadius: "10px",
+                background: "rgba(59,130,246,0.1)",
+                color: "#3b82f6",
+                fontWeight: 600,
+                textDecoration: "none",
               }}
-            />
-
-            <p style={{ fontSize: "12px", opacity: 0.7, marginTop: "6px", lineHeight: "1.4" }}>
-  1. Start our bot 👉{" "}
-  <a href="https://t.me/meedibook_bot" target="_blank" style={{ color: "#3b82f6" }}>
-    Open meedi_book bot
-  </a>
-  <br />
-  2. Get your ID 👉{" "}
-  <a href="https://t.me/userinfobot" target="_blank" style={{ color: "#3b82f6" }}>
-    @userinfobot
-  </a>
-</p>
+            >
+              🔗 Connect Telegram (Required)
+            </a>
 
             <input
               type="date"
@@ -530,7 +521,6 @@ export default function DoctorsPage() {
                       body: JSON.stringify({
                         patientName,
                         phone,
-                        telegramId,
                         doctor: selectedDoctor?.name,
                         date,
                         time,
