@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 type Doctor = {
@@ -85,6 +86,7 @@ const supabase = createClient(
 );
 
 export default function DoctorsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
@@ -93,6 +95,7 @@ export default function DoctorsPage() {
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [telegramId, setTelegramId] = useState("");
 
   const [darkMode, setDarkMode] = useState(true);
   const pageRef = useRef<HTMLDivElement | null>(null);
@@ -111,6 +114,26 @@ export default function DoctorsPage() {
     };
     window.addEventListener("mousemove", onMouseMove);
     return () => window.removeEventListener("mousemove", onMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const handler = (event: any) => {
+      if (event.data?.type === "BOOK_DOCTOR") {
+        const doctorName = event.data.doctor;
+
+        const doctor = doctors.find((d) => d.name === doctorName);
+        if (doctor) {
+          setSelectedDoctor(doctor);
+          setShowModal(true);
+        }
+      }
+    };
+
+    window.addEventListener("message", handler);
+
+    return () => {
+      window.removeEventListener("message", handler);
+    };
   }, []);
 
   const filteredDoctors = doctors.filter((doc) =>
@@ -138,6 +161,36 @@ export default function DoctorsPage() {
       }}
     >
       <div style={{ maxWidth: "1200px", margin: "auto" }}>
+        {/* 🔙 Back to Home */}
+<div
+  onClick={() => router.push("/")}
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    cursor: "pointer",
+    marginBottom: "30px",
+    padding: "10px 16px",
+    borderRadius: "14px",
+    background: "rgba(59,130,246,0.08)",
+    border: "1px solid rgba(59,130,246,0.2)",
+    width: "fit-content",
+    transition: "all 0.25s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-3px) scale(1.03)";
+    e.currentTarget.style.boxShadow = "0 10px 30px rgba(59,130,246,0.3)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0) scale(1)";
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  <span style={{ fontSize: "18px", color: "#93c5fd" }}>←</span>
+  <span style={{ fontWeight: 700, color: "#93c5fd" }}>
+    Back to MediBook
+  </span>
+</div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -367,6 +420,32 @@ export default function DoctorsPage() {
                 borderRadius: "8px"
               }}
             />
+            <input
+              placeholder="Telegram ID (get it from @userinfobot)"
+              value={telegramId}
+              onChange={(e) => setTelegramId(e.target.value)}
+              style={{
+                width: "100%",
+                marginTop: "10px",
+                padding: "10px",
+                background: "#0f172a",
+                color: "#ffffff",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: "8px"
+              }}
+            />
+
+            <p style={{ fontSize: "12px", opacity: 0.7, marginTop: "6px", lineHeight: "1.4" }}>
+  1. Start our bot 👉{" "}
+  <a href="https://t.me/meedibook_bot" target="_blank" style={{ color: "#3b82f6" }}>
+    Open meedi_book bot
+  </a>
+  <br />
+  2. Get your ID 👉{" "}
+  <a href="https://t.me/userinfobot" target="_blank" style={{ color: "#3b82f6" }}>
+    @userinfobot
+  </a>
+</p>
 
             <input
               type="date"
@@ -451,6 +530,7 @@ export default function DoctorsPage() {
                       body: JSON.stringify({
                         patientName,
                         phone,
+                        telegramId,
                         doctor: selectedDoctor?.name,
                         date,
                         time,

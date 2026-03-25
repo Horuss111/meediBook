@@ -4,7 +4,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { patientName, phone, doctor, date, time } = body;
+    const { patientName, phone, telegramId, doctor, date, time } = body;
 
     // 🧾 Message for customer
     const customerMessage = `Hello ${patientName},
@@ -130,6 +130,43 @@ Time: ${time}
       }
     } catch (err) {
       console.error("❌ TELEGRAM CRASH:", err);
+    }
+    // =========================
+    // 📲 TELEGRAM TO CUSTOMER (REAL)
+    // =========================
+    if (telegramId) {
+      try {
+        const customerTelegramRes = await fetch(
+          `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chat_id: telegramId,
+              text: `✅ APPOINTMENT CONFIRMED
+
+👤 ${patientName}
+🩺 ${doctor}
+📅 ${date}
+⏰ ${time}
+
+MediBook 🏥`,
+            }),
+          }
+        );
+
+        const customerTelegramData = await customerTelegramRes.json();
+
+        if (!customerTelegramRes.ok) {
+          console.error("❌ CUSTOMER TELEGRAM ERROR:", customerTelegramData);
+        } else {
+          console.log("✅ Customer Telegram sent");
+        }
+      } catch (err) {
+        console.error("❌ CUSTOMER TELEGRAM CRASH:", err);
+      }
     }
 
     return NextResponse.json({

@@ -492,6 +492,30 @@ export default function MediBookWebsiteLandingPage() {
         .floating-whatsapp { position: fixed; left: 22px; bottom: 22px; z-index: 60; display: flex; align-items: center; gap: 10px; border-radius: 999px; padding: 14px 20px; background: #25d366; color: white; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; box-shadow: 0 16px 44px rgba(37,211,102,0.4); transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .floating-whatsapp:hover { transform: translateY(-3px); box-shadow: 0 22px 56px rgba(37,211,102,0.55); }
 
+        .floating-ai {
+          position: fixed;
+          right: 22px;
+          bottom: 22px;
+          z-index: 70;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          font-size: 24px;
+          box-shadow: 0 20px 50px rgba(59,130,246,0.5);
+          transition: all 0.25s ease;
+          text-decoration: none;
+        }
+
+        .floating-ai:hover {
+          transform: translateY(-5px) scale(1.08);
+          box-shadow: 0 25px 70px rgba(59,130,246,0.7);
+        }
+
         @keyframes floatLuxury { 0%, 100% { transform: translate(-50%,-50%) translateY(0); } 50% { transform: translate(-50%,-50%) translateY(-18px); } }
         @keyframes splashPulse { 0%, 100% { opacity: .42; transform: scale(.93); } 50% { opacity: 1; transform: scale(1); } }
         .splash-pulse { animation: splashPulse 1.5s ease-in-out infinite; }
@@ -534,6 +558,10 @@ export default function MediBookWebsiteLandingPage() {
           .faq-a { padding: 0 16px; }
           .faq-item.open .faq-a { padding-bottom: 18px; }
           .floating-whatsapp { padding: 12px 16px; font-size: 13px; bottom: 16px; left: 16px; }
+          .floating-ai {
+            right: 16px;
+            bottom: 90px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -901,6 +929,14 @@ export default function MediBookWebsiteLandingPage() {
 
         <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="floating-whatsapp">
           <span>💬</span> WhatsApp Us
+        </a>
+        {/* 🤖 AI Assistant Floating Button */}
+        <a
+          href="/chat"
+          className="floating-ai"
+          title="Open MediBook AI"
+        >
+          <span>🤖</span>
         </a>
       </div>
     </>

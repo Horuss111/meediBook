@@ -1,5 +1,4 @@
 import "./globals.css";
-import Script from "next/script";
 
 export const metadata = {
   title: "MediBook",
@@ -13,23 +12,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        />
+      </head>
       <body>
         {children}
-
-        {/* ✅ Chatbase Bot */}
-        <Script id="chatbase-config" strategy="afterInteractive">
-          {`
-            window.embeddedChatbotConfig = {
-              chatbotId: "2UW_nmQKjpYwGfmHXaldS",
-              domain: "www.chatbase.co"
-            };
-            var s = document.createElement("script");
-            s.src = "https://www.chatbase.co/embed.min.js";
-            s.defer = true;
-            document.body.appendChild(s);
-          `}
-        </Script>
-
       </body>
     </html>
   );
