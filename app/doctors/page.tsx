@@ -401,7 +401,7 @@ export default function DoctorsPage() {
             <button
               onClick={async () => {
                 if (!patientName || !phone || !date || !time) {
-                  alert("Please fill all fields");
+                  console.warn("Missing fields");
                   return;
                 }
 
@@ -417,10 +417,11 @@ export default function DoctorsPage() {
 
                 if (existing && existing.length > 0) {
                   setLoading(false);
-                  alert("⚠️ This time slot is already booked");
+                  console.warn("Time slot already booked");
                   return;
                 }
 
+                // 🔐 Save booking to database
                 const { error } = await supabase.from("appointments").insert([
                   {
                     doctor_name: selectedDoctor?.name,
@@ -435,14 +436,29 @@ export default function DoctorsPage() {
 
                 if (error) {
                   console.error(error);
-                  alert("❌ Booking failed");
+                  console.error("Booking failed");
                 } else {
                   setSuccess(true);
+                  // 📩 Trigger automatic confirmation (SMS / WhatsApp API handled in backend)
 
-                  // WhatsApp auto message
-                  const message = `Hello 👋\nYour booking is confirmed ✅\nDoctor: ${selectedDoctor?.name}\nDate: ${date} ${time}`;
-                  const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-                  window.open(whatsappURL, "_blank");
+                  // 🔥 AUTO SEND (no WhatsApp opening)
+                  try {
+                    await fetch("/api/send-confirmation", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        patientName,
+                        phone,
+                        doctor: selectedDoctor?.name,
+                        date,
+                        time,
+                      }),
+                    });
+                  } catch (err) {
+                    console.error("Auto message failed:", err);
+                  }
 
                   setTimeout(() => {
                     setShowModal(false);
