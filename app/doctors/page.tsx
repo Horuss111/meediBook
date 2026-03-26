@@ -95,6 +95,7 @@ export default function DoctorsPage() {
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
 
   const [darkMode, setDarkMode] = useState(true);
   const pageRef = useRef<HTMLDivElement | null>(null);
@@ -419,6 +420,20 @@ export default function DoctorsPage() {
                 borderRadius: "8px"
               }}
             />
+            <input
+              placeholder="Telegram username (example: @karim)"
+              value={telegramUsername}
+              onChange={(e) => setTelegramUsername(e.target.value)}
+              style={{
+                width: "100%",
+                marginTop: "10px",
+                padding: "10px",
+                background: "#0f172a",
+                color: "#ffffff",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: "8px"
+              }}
+            />
             {/* Telegram connect button */}
             <a
               href="https://t.me/meedibook_bot?start=medibook"
@@ -470,7 +485,7 @@ export default function DoctorsPage() {
 
             <button
               onClick={async () => {
-                if (!patientName || !phone || !date || !time) {
+                if (!patientName || !phone || !telegramUsername || !date || !time) {
                   console.warn("Missing fields");
                   return;
                 }
@@ -521,6 +536,7 @@ export default function DoctorsPage() {
                       body: JSON.stringify({
                         patientName,
                         phone,
+                        telegramUsername,
                         doctor: selectedDoctor?.name,
                         date,
                         time,

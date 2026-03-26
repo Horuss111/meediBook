@@ -95,48 +95,43 @@ Time: ${time}
     }
 
     // =========================
-    // 📲 TELEGRAM NOTIFICATION (REAL)
+    // 📲 TELEGRAM TO ALL USERS (FROM DB)
     // =========================
-    console.log("TELEGRAM DEBUG:", process.env.TELEGRAM_BOT_TOKEN, process.env.TELEGRAM_CHAT_ID);
     try {
-      const telegramRes = await fetch(
-        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      const usersRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/telegram_users`,
         {
-          method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
           },
-          body: JSON.stringify({
-            chat_id: process.env.TELEGRAM_CHAT_ID,
-            text: `🚀 NEW BOOKING
-
-👤 Patient: ${patientName}
-📞 Phone: ${phone}
-🩺 Doctor: ${doctor}
-📅 Date: ${date}
-⏰ Time: ${time}
-
-🔥 MediBook`,
-          }),
         }
       );
 
-      const telegramData = await telegramRes.json();
+      const usersData = await usersRes.json();
 
-      if (!telegramRes.ok) {
-        console.error("❌ TELEGRAM ERROR:", telegramData);
-      } else {
-        console.log("✅ Telegram message sent");
+      console.log("👥 RAW USERS RESPONSE:", usersData);
+
+      const users = Array.isArray(usersData) ? usersData : [];
+
+      if (!Array.isArray(usersData)) {
+        console.error("❌ USERS NOT ARRAY - CHECK SUPABASE KEY OR RESPONSE");
       }
-    } catch (err) {
-      console.error("❌ TELEGRAM CRASH:", err);
-    }
-    // =========================
-    // 📲 TELEGRAM TO CUSTOMER (REAL)
-    // =========================
-    if (telegramId) {
-      try {
-        const customerTelegramRes = await fetch(
+
+      if (users.length === 0) {
+        console.error("❌ NO TELEGRAM USERS FOUND");
+      }
+
+      const uniqueUsers = Array.from(
+        new Map(users.map((u: any) => [u.chat_id, u])).values()
+      );
+
+      for (const user of uniqueUsers) {
+        if (!user.chat_id) {
+          console.error("❌ Missing chat_id:", user);
+          continue;
+        }
+        await fetch(
           `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
           {
             method: "POST",
@@ -144,7 +139,7 @@ Time: ${time}
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              chat_id: telegramId,
+              chat_id: user.chat_id,
               text: `✅ APPOINTMENT CONFIRMED
 
 👤 ${patientName}
@@ -156,17 +151,11 @@ MediBook 🏥`,
             }),
           }
         );
-
-        const customerTelegramData = await customerTelegramRes.json();
-
-        if (!customerTelegramRes.ok) {
-          console.error("❌ CUSTOMER TELEGRAM ERROR:", customerTelegramData);
-        } else {
-          console.log("✅ Customer Telegram sent");
-        }
-      } catch (err) {
-        console.error("❌ CUSTOMER TELEGRAM CRASH:", err);
       }
+
+      console.log("✅ Telegram sent to all users");
+    } catch (err) {
+      console.error("❌ TELEGRAM DB ERROR:", err);
     }
 
     return NextResponse.json({

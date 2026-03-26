@@ -10,14 +10,37 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   const chatId = body.message?.chat?.id;
-  const username = body.message?.from?.username;
+  let username = body.message?.from?.username;
+
+  // normalize username (remove @ and lowercase)
+  if (username) {
+    username = username.replace("@", "").toLowerCase();
+  }
 
   if (!chatId) return NextResponse.json({ ok: false });
 
   // 🔥 Save user
-  await supabase.from("telegram_users").upsert({
-    chat_id: chatId,
-    username: username || null,
+  const { data, error } = await supabase
+    .from("telegram_users")
+    .upsert(
+      {
+        chat_id: chatId,
+        username: username || null,
+      },
+      {
+        onConflict: "chat_id",
+      }
+    );
+
+  if (error) {
+    console.error("❌ TELEGRAM SAVE ERROR:", error);
+  } else {
+    console.log("✅ Telegram user saved:", { chatId, username });
+  }
+
+  console.log("📩 Incoming Telegram webhook:", {
+    chatId,
+    username,
   });
 
   return NextResponse.json({ ok: true });

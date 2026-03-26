@@ -144,32 +144,82 @@ export async function POST(req: Request) {
 
     let reply = "";
 
-    if (userMessage.includes("book")) {
-      reply = "Sure — I can help you book an appointment. Which specialty are you looking for?";
+    // ── SMART INTENT DETECTION ──
+    const wantsBooking =
+      userMessage.includes("book") ||
+      userMessage.includes("appointment") ||
+      userMessage.includes("reserve");
+
+    const needsCardio =
+      userMessage.includes("heart") ||
+      userMessage.includes("chest") ||
+      userMessage.includes("cardio");
+
+    const needsDentist =
+      userMessage.includes("tooth") ||
+      userMessage.includes("teeth") ||
+      userMessage.includes("dent");
+
+    const needsOrtho =
+      userMessage.includes("bone") ||
+      userMessage.includes("joint") ||
+      userMessage.includes("orthopedic");
+
+    const askingFounder =
+      userMessage.includes("founder") ||
+      userMessage.includes("karim diab");
+
+    const greeting =
+      userMessage === "hi" ||
+      userMessage === "hello" ||
+      userMessage === "hey";
+
+    // ── RESPONSE LOGIC ──
+    if (greeting) {
+      reply = "Hi 👋 I'm your MediBook assistant. I can help you find doctors, book appointments, or answer health questions.";
     }
 
-    else if (userMessage.includes("cardio") || userMessage.includes("heart")) {
-      reply = "For heart-related concerns, I recommend **Dr. Salma Ashraf (Cardiologist)**. Would you like me to help you book?";
-    }
-
-    else if (userMessage.includes("dent") || userMessage.includes("tooth")) {
-      reply = "You can book with **Dr. Karim Nabil (Dentist)** for dental care and treatments.";
-    }
-
-    else if (userMessage.includes("bone") || userMessage.includes("orthopedic")) {
-      reply = "For bone or joint issues, I recommend **Dr. Ahmed Hassan (Orthopedic Specialist)**.";
-    }
-
-    else if (userMessage.includes("karim diab")) {
+    else if (askingFounder) {
       reply = "Karim Diab is the founder of MediBook — a premium healthcare platform based in Cairo, Egypt.";
     }
 
+    else if (needsCardio) {
+      reply =
+        "For heart or chest-related concerns, I recommend **Dr. Salma Ashraf (Cardiologist)**.\n\nWould you like me to help you book an appointment?";
+    }
+
+    else if (needsDentist) {
+      reply =
+        "For dental care, I recommend **Dr. Karim Nabil (Dentist)** — he handles cleaning, implants, and general dental treatments.";
+    }
+
+    else if (needsOrtho) {
+      reply =
+        "For bone or joint issues, I recommend **Dr. Ahmed Hassan (Orthopedic Specialist)**.";
+    }
+
+    else if (wantsBooking) {
+      reply =
+        "I can help you book an appointment.\n\n• What type of doctor are you looking for?\n• Or tell me your symptoms and I’ll guide you.";
+    }
+
     else if (userMessage.includes("price") || userMessage.includes("plan")) {
-      reply = "MediBook offers:\n\n• **Basic (Free)** — limited bookings\n• **Pro ($12/month)** — unlimited bookings + priority care\n• **Clinic ($49/month)** — for teams & clinics\n\nWould you like help choosing a plan?";
+      reply =
+        "MediBook offers:\n\n• **Basic (Free)** — limited bookings\n• **Pro ($12/month)** — unlimited bookings + priority care\n• **Clinic ($49/month)** — for teams & clinics\n\nWhich one fits your needs?";
+    }
+
+    else if (
+      userMessage.includes("pain") ||
+      userMessage.includes("symptom") ||
+      userMessage.includes("problem")
+    ) {
+      reply =
+        "I can help guide you based on your symptoms.\n\nTell me more about what you're feeling, and I’ll suggest the right specialist.";
     }
 
     else {
-      reply = "I can help you find doctors, book appointments, or answer health questions. What would you like to do?";
+      reply =
+        "I understand your request.\n\nI can help you:\n• Find the right doctor\n• Book appointments\n• Answer health questions\n\nJust tell me what you need.";
     }
 
     return NextResponse.json({
