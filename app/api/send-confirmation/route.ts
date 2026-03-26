@@ -4,7 +4,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { patientName, phone, telegramId, doctor, date, time } = body;
+    const { patientName, phone, telegramUsername, doctor, date, time } = body;
 
     // 🧾 Message for customer
     const customerMessage = `Hello ${patientName},
@@ -95,52 +95,47 @@ Time: ${time}
     }
 
     // =========================
-    // 📲 TELEGRAM TO ALL USERS (FROM DB)
+    // 📲 TELEGRAM TO MATCHED USER (TARGETED)
     // =========================
     try {
-      const usersRes = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/telegram_users`,
-        {
-          headers: {
-            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-          },
-        }
-      );
+      const normalizedUsername = (telegramUsername || "")
+        .replace("@", "")
+        .toLowerCase();
 
-      const usersData = await usersRes.json();
+      console.log("🔍 Searching for:", normalizedUsername);
 
-      console.log("👥 RAW USERS RESPONSE:", usersData);
-
-      const users = Array.isArray(usersData) ? usersData : [];
-
-      if (!Array.isArray(usersData)) {
-        console.error("❌ USERS NOT ARRAY - CHECK SUPABASE KEY OR RESPONSE");
-      }
-
-      if (users.length === 0) {
-        console.error("❌ NO TELEGRAM USERS FOUND");
-      }
-
-      const uniqueUsers = Array.from(
-        new Map(users.map((u: any) => [u.chat_id, u])).values()
-      );
-
-      for (const user of uniqueUsers) {
-        if (!user.chat_id) {
-          console.error("❌ Missing chat_id:", user);
-          continue;
-        }
-        await fetch(
-          `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      if (!normalizedUsername) {
+        console.error("❌ No telegramUsername provided");
+      } else {
+        const userRes = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/telegram_users?username=eq.${normalizedUsername}&limit=1`,
           {
-            method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
             },
-            body: JSON.stringify({
-              chat_id: user.chat_id,
-              text: `✅ APPOINTMENT CONFIRMED
+          }
+        );
+
+        const users = await userRes.json();
+        const user = Array.isArray(users) ? users[0] : null;
+
+        console.log("👤 Found:", user);
+
+        // 🚨 HARD STOP
+        if (!user || !user.chat_id) {
+          console.error("❌ USER NOT FOUND → STOP");
+        } else {
+          const res = await fetch(
+            `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                chat_id: user.chat_id,
+                text: `✅ APPOINTMENT CONFIRMED
 
 👤 ${patientName}
 🩺 ${doctor}
@@ -148,14 +143,21 @@ Time: ${time}
 ⏰ ${time}
 
 MediBook 🏥`,
-            }),
-          }
-        );
-      }
+              }),
+            }
+          );
 
-      console.log("✅ Telegram sent to all users");
+          const data = await res.json();
+
+          if (!res.ok) {
+            console.error("❌ TELEGRAM SEND ERROR:", data);
+          } else {
+            console.log("✅ Telegram sent to matched user:", normalizedUsername);
+          }
+        }
+      }
     } catch (err) {
-      console.error("❌ TELEGRAM DB ERROR:", err);
+      console.error("❌ TELEGRAM TARGET ERROR:", err);
     }
 
     return NextResponse.json({
